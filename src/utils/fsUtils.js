@@ -15,10 +15,25 @@ async function readMissionsData() {
   }
 }
 
+function getHighestId(array) {
+  let highestID = array[0].id;
+  array.forEach((each) => {
+    if (each.id > highestID) highestID = each.id;
+  });
+  return highestID;
+}
+
 async function writeNewMissionData(newMission) {
   try {
     const oldMissions = await readMissionsData();
-    const allMissions = [...oldMissions, newMission];
+    const highestID = getHighestId(oldMissions);
+
+    const theNewMission = {
+      id: highestID + 1,
+      ...newMission,
+    };
+
+    const allMissions = [...oldMissions, theNewMission];
     await fs.writeFile(
       path.resolve(__dirname, DATA_PATH),
       JSON.stringify(allMissions),
@@ -28,4 +43,37 @@ async function writeNewMissionData(newMission) {
   }
 }
 
-module.exports = { readMissionsData, writeNewMissionData };
+async function updateMissionData(id, updatedMissionData) {
+  const oldMissions = await readMissionsData();
+  const updateMission = { id, ...updatedMissionData };
+
+  const updatedMissions = oldMissions.reduce((missionList, currentMission) => {
+    if (currentMission.id === updateMission.id) return [...missionList, updateMission];
+    return [...missionList, currentMission];
+  }, []);
+
+  try {
+    await fs.writeFile(
+      path.resolve(__dirname, DATA_PATH),
+      JSON.stringify(updatedMissions),
+    );
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+async function deleteMissionData(id) {
+  const oldMissions = await readMissionsData();
+  const newArrayOfMissions = oldMissions.filter(({ id: eachId }) => id !== eachId);
+
+  try {
+    await fs.writeFile(
+      path.resolve(__dirname, DATA_PATH),
+      JSON.stringify(newArrayOfMissions),
+    );
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+module.exports = { readMissionsData, writeNewMissionData, updateMissionData, deleteMissionData };
