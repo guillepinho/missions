@@ -26,14 +26,8 @@ function getHighestId(array) {
 async function writeNewMissionData(newMission) {
   try {
     const oldMissions = await readMissionsData();
-    const highestID = getHighestId(oldMissions);
 
-    const theNewMission = {
-      id: highestID + 1,
-      ...newMission,
-    };
-
-    const allMissions = [...oldMissions, theNewMission];
+    const allMissions = [...oldMissions, newMission];
     await fs.writeFile(
       path.resolve(__dirname, DATA_PATH),
       JSON.stringify(allMissions),
@@ -76,4 +70,10 @@ async function deleteMissionData(id) {
   }
 }
 
-module.exports = { readMissionsData, writeNewMissionData, updateMissionData, deleteMissionData };
+module.exports = {
+  readMissionsData,
+  writeNewMissionData,
+  updateMissionData,
+  deleteMissionData,
+  getHighestId,
+};

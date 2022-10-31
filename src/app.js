@@ -5,6 +5,7 @@ const {
   writeNewMissionData,
   updateMissionData,
   deleteMissionData,
+  getHighestId,
 } = require('./utils/fsUtils');
 
 const app = express();
@@ -17,7 +18,16 @@ app.get('/missions', async (req, res) => {
 });
 
 app.post('/missions', async (req, res) => {
-  const newMission = req.body;
+  const missionBody = req.body;
+  const missions = await readMissionsData();
+
+  const highestID = getHighestId(missions);
+
+  const newMission = {
+    id: highestID + 1,
+    ...missionBody,
+  };
+
   await writeNewMissionData(newMission);
 
   return res.status(201).json({ mission: newMission });
