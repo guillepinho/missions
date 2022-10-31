@@ -57,8 +57,8 @@ describe('Testa a rota de missions', function () {
 
     it('Escreve a nova missão no arquivo de missões', async function () {
       await chai.request(app)
-      .post('/missions')
-      .send(mockMission);
+        .post('/missions')
+        .send(mockMission);
 
       expect(fs.promises.writeFile.called).to.be.equal(true);
     });
