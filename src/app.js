@@ -1,4 +1,5 @@
 const express = require('express');
+require('express-async-errors');
 
 const {
   readMissionsData,
@@ -62,16 +63,16 @@ app.post('/missions', validadeMissionData, async (req, res) => {
 });
 
 app.put(
-'/missions/:id', 
-validateMissionId,
-validateExistingId,
-validadeMissionData, 
-async (req, res) => {
-  const { id } = req.params;
-  const updatedMissionData = req.body;
-  const updatedMission = await updateMissionData(Number(id), updatedMissionData);
-  return res.status(201).json({ mission: updatedMission });
-},
+  '/missions/:id',
+  validateMissionId,
+  validateExistingId,
+  validadeMissionData,
+  async (req, res) => {
+    const { id } = req.params;
+    const updatedMissionData = req.body;
+    const updatedMission = await updateMissionData(Number(id), updatedMissionData);
+    return res.status(201).json({ mission: updatedMission });
+  },
 );
 
 app.delete('/missions/:id', validateMissionId, validateExistingId, async (req, res) => {
@@ -79,6 +80,15 @@ app.delete('/missions/:id', validateMissionId, validateExistingId, async (req, r
   await deleteMissionData(Number(id));
 
   return res.status(204).end();
+});
+
+app.use((err, _req, _res, next) => {
+  console.error(err.stack);
+  next(err);
+});
+
+app.use((err, _req, res, _next) => {
+  res.status(500).send({ message: `Who's bad? ${err}` });
 });
 
 module.exports = app;

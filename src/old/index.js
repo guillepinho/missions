@@ -1,5 +1,5 @@
 const readline = require('readline-sync');
-const { readMissionsData, writeNewMissionData } = require('./utils/fsUtils');
+const { readMissionsData, writeNewMissionData } = require('../utils/fsUtils');
 
 async function main() {
   const name = readline.question('Qual é o nome da missão?');
