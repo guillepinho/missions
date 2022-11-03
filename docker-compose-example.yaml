@@ -4,7 +4,23 @@ services:
     image: mysql:8.0.29
     restart: always
     environment:
-      - MYSQL_ROOT_PASSWORD=<SENHA>
-      - MYSQL_DATABASE=trybestrelar
+      - MYSQL_ROOT_PASSWORD=<PASSWORD>
+      - MYSQL_DATABASE=missions
     ports:
-      - "33062:3306"
+      - "<LOCAL_PORT>:3306"
+
+  backend:
+    build: backend/
+    restart: always
+    ports:
+      - "<LOCAL_PORT>:3002"
+    depends_on:
+      - db
+      
+  frontend:
+    build: frontend/
+    restart: always
+    ports:
+      - "<LOCAL_PORT>:3000"
+    depends_on:
+      - backend

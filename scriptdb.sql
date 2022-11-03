@@ -1,6 +1,6 @@
-DROP DATABASE IF EXISTS trybestrelar;
-CREATE DATABASE trybestrelar;
-USE trybestrelar;
+DROP DATABASE IF EXISTS missions;
+CREATE DATABASE missions;
+USE missions;
 
 CREATE TABLE 
   missions (
