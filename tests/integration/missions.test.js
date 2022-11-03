@@ -1,9 +1,10 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const sinon = require('sinon');
-const fs = require('fs');
+
 const app = require('../../src/app');
-const mockMissions = require('../mockFile/mockMissions');
+const connection = require('../../src/db/connection');
+const mockMissions = require('./mockMissions');
 
 const { expect } = chai;
 chai.use(chaiHttp);
@@ -11,11 +12,10 @@ chai.use(chaiHttp);
 describe('Testa a rota de missions', function () {
   describe('GET /missions', function () {
     it('Retorna uma lista de missões', async function () {
-      sinon.stub(fs.promises, 'readFile')
-        .resolves(mockMissions);
+      sinon.stub(connection, 'execute')
+        .resolves([mockMissions]);
 
-      const response = await chai
-        .request(app)
+      const response = await chai.request(app)
         .get('/missions');
 
       expect(response.status).to.be.equal(200);
@@ -27,19 +27,25 @@ describe('Testa a rota de missions', function () {
   });
 
   describe('POST /missions', function () {
-    beforeEach(function () {
-      sinon.stub(fs.promises, 'writeFile').resolves();
-    });
-
-    afterEach(sinon.restore);
-
     const mockMission = {
       name: 'Trybe',
       year: '2022',
       country: 'Brasil',
       destination: 'Marte',
     };
-    
+
+    const mockId = 25;
+
+    beforeEach(function () {
+      sinon.stub(connection, 'execute')
+        .onFirstCall()
+          .resolves([{ insertId: mockId }])
+        .onSecondCall()
+          .resolves([{ id: mockId, ...mockMission }]);
+    });
+
+    afterEach(sinon.restore);
+
     it('Grava uma nova missão', async function () {
       const response = await chai
         .request(app)
@@ -55,12 +61,12 @@ describe('Testa a rota de missions', function () {
       expect(response.body.mission.destination).to.be.equal(mockMission.destination);
     });
 
-    it('Escreve a nova missão no arquivo de missões', async function () {
+    it('Escreve a nova missão no banco de dados', async function () {
       await chai.request(app)
         .post('/missions')
         .send(mockMission);
 
-      expect(fs.promises.writeFile.called).to.be.equal(true);
+      expect(connection.execute.calledTwice).to.be.equal(true);
     });
   });
 });

@@ -2,42 +2,19 @@ const express = require('express');
 require('express-async-errors');
 
 const {
-  readMissionsData,
-  writeNewMissionData,
-  updateMissionData,
-  deleteMissionData,
-  getHighestId,
-} = require('./utils/fsUtils');
+  findAll, findById, insert,
+  update, remove,
+} = require('./db/missionsDb');
 
 const app = express();
 
 app.use(express.json());
 
-const validateMissionId = (req, res, next) => {
-  const { id } = req.params;
-  const idAsNumber = Number(id);
-  console.log(idAsNumber);
-  console.log(Number.isNaN(idAsNumber));
-  if (Number.isNaN(idAsNumber)) {
-    return res.status(400).send({ message: 'Bad Request. Invalid ID.' });
-  }
-  next();
-};
-
-const validadeMissionData = (req, res, next) => {
-  const requiredProperties = ['name', 'year', 'country', 'destination'];
-  if (requiredProperties.every((property) => property in req.body)) {
-    next();
-  } else {
-    res.status(400).send({
-      message: 'Bad Request. Invalid body (name, year, country, destination)',
-    });
-  }
-};
+const { validadeMissionData, validateMissionId } = require('./utils/validations');
 
 const validateExistingId = async (req, res, next) => {
   const { id } = req.params;
-  const missions = await readMissionsData();
+  const missions = await findAll();
   if (missions.some((mission) => mission.id === Number(id))) {
     next();
   } else {
@@ -46,20 +23,20 @@ const validateExistingId = async (req, res, next) => {
 };
 
 app.get('/missions', async (req, res) => {
-  const missions = await readMissionsData();
+  const missions = await findAll();
+  return res.status(200).json({ missions });
+});
+
+app.get('/missions/:id', async (req, res) => {
+  const { id } = req.params;
+  const missions = await findById(id);
   return res.status(200).json({ missions });
 });
 
 app.post('/missions', validadeMissionData, async (req, res) => {
-  const missionBody = req.body;
-  const missions = await readMissionsData();
-  const highestID = getHighestId(missions);
-  const newMission = {
-    id: highestID + 1,
-    ...missionBody,
-  };
-  await writeNewMissionData(newMission);
-  return res.status(201).json({ mission: newMission });
+  const mission = req.body;
+  const insertedMission = await insert(mission);
+  return res.status(201).json({ mission: insertedMission });
 });
 
 app.put(
@@ -70,16 +47,16 @@ app.put(
   async (req, res) => {
     const { id } = req.params;
     const updatedMissionData = req.body;
-    const updatedMission = await updateMissionData(Number(id), updatedMissionData);
+    const updatedMission = await update(Number(id), updatedMissionData);
     return res.status(201).json({ mission: updatedMission });
   },
 );
 
 app.delete('/missions/:id', validateMissionId, validateExistingId, async (req, res) => {
   const { id } = req.params;
-  await deleteMissionData(Number(id));
+  await remove(Number(id));
 
-  return res.status(204).end();
+  return res.status(200).json({ message: `Mission with id ${id} was successfully terminated.` });
 });
 
 app.use((err, _req, _res, next) => {
